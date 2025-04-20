@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Facturas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #eef1f5;
+            padding: 2rem;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        label {
+            font-weight: bold;
+            margin-top: 1rem;
+            display: block;
+        }
+        input[type="file"], select, input[type="text"] {
+            width: 100%;
+            padding: 0.5rem;
+            margin-top: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        button {
+            width: 100%;
+            padding: 0.7rem;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .output-section {
+            margin-top: 2rem;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+        }
+        .output-section h3 {
+            margin-bottom: 0.5rem;
+        }
+        .output-section ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        .output-section li {
+            margin-bottom: 0.5rem;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            margin-top: 1rem;
+            padding: 1rem;
+            font-family: monospace;
+            font-size: 0.95rem;
+            background-color: #f4f4f4;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            resize: vertical;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Subir Factura</h2>
+        <form method="POST" enctype="multipart/form-data">
+            <label for="archivo">Seleccionar imagen de la factura</label>
+            <input type="file" name="archivo" id="archivo" accept="image/*" required>
+
+            <button type="submit">Procesar Factura</button>
+        </form>
+
+        {% if datos %}
+            <div class="output-section">
+                <h3>Datos extraídos:</h3>
+                <ul>
+                    {% for key, value in datos.items() %}
+                        <li><strong>{{ key|capitalize }}:</strong> {{ value }}</li>
+                    {% endfor %}
+                </ul>
+
+                <h3>Corrige los datos si es necesario:</h3>
+                <form method="POST" action="{{ url_for('dashboard') }}">
+                    {% for key, value in datos.items() %}
+                      <label for="{{ key }}">{{ key|capitalize }}:</label>
+                      <input type="text"
+                             id="{{ key }}"
+                             name="{{ key }}"
+                             value="{{ value }}"
+                             required>
+                    {% endfor %}
+                    <button type="submit">Actualizar Datos</button>
+                  </form>
+                  <form method="POST" action="{{ url_for('generar_pdf_route') }}">
+                      {% for key, value in datos.items() %}
+                        <!-- ocultamos los mismos campos en hidden -->
+                        <input type="hidden" name="{{ key }}" value="{{ value }}">
+                      {% endfor %}
+                      <button type="submit">Descargar PDF</button>
+                    </form>
+            </div>
+            
+            <!-- Botón para generar y descargar PDF -->
+        {% endif %}
+
+        {% if texto_ocr %}
+            <div class="output-section">
+                <h3>Texto OCR detectado:</h3>
+                <textarea readonly>{{ texto_ocr }}</textarea>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,7 @@
+Flask
+pytesseract
+Pillow
+reportlab
+Babel
+opencv-python
+numpy
