@@ -10,6 +10,8 @@ import numpy as np
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from deepseek_client import normalizar_por_deepseek
+from extract_logo import extract_logo
+from flask import send_from_directory
 
 # Ruta de Tesseract en Windows
 pytesseract.pytesseract.tesseract_cmd = r'C:\Tesseract\tesseract.exe'
@@ -85,6 +87,10 @@ def generar_pdf(datos_extraidos, output_path):
 def index():
     return render_template('login.html')
 
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
 @app.route('/login', methods=['POST'])
 def login():
     usuario = request.form['usuario']
@@ -99,17 +105,18 @@ def login():
 def dashboard():
     if 'usuario' not in session:
         return redirect(url_for('index'))
-    
-    if request.method == 'POST' and (not request.files.get('archivo') or request.files['archivo'].filename == ""):
-        # Reconstruye los datos directamente desde los inputs corregidos
-        datos_extraidos = request.form.to_dict(flat=True)
-        # Recupera el último texto OCR que habías guardado en sesión
-        texto_ocr = session.get('last_ocr', '')
-        return render_template('dashboard.html', datos=datos_extraidos, texto_ocr=texto_ocr)
 
+    # 1) Corrección de datos (form sin archivo)
+    if request.method == 'POST' and (not request.files.get('archivo') or request.files['archivo'].filename == ""):
+        datos_extraidos = request.form.to_dict(flat=True)
+        texto_ocr = session.get('last_ocr', '')
+        logo_url = session.get('last_logo', None)
+        return render_template('dashboard.html', datos=datos_extraidos, texto_ocr=texto_ocr, logo_url=logo_url)
+
+    # 2) Subida y procesamiento de facturas
     if request.method == 'POST':
         archivo = request.files.get('archivo')
-        pais = request.form.get('pais', '').lower()
+        pais    = request.form.get('pais', '').lower()
 
         if not archivo or not allowed_file(archivo.filename):
             return "Archivo no permitido o faltante", 400
@@ -121,13 +128,19 @@ def dashboard():
         ruta_archivo = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
         archivo.save(ruta_archivo)
 
+        # Extraer logo antes del OCR
+        base, _ = os.path.splitext(unique_filename)
+        logo_filename = f"{base}_logo.png"
+        logo_path = os.path.join(app.config['UPLOAD_FOLDER'], logo_filename)
+        logo_found = extract_logo(ruta_archivo, logo_path)
+        session['last_logo'] = logo_filename if logo_found else None
+
         try:
             imagen_preprocesada = preprocess_image(ruta_archivo)
             texto = pytesseract.image_to_string(imagen_preprocesada, config='--psm 6')
         except Exception as e:
             return f"Error al procesar la imagen: {e}", 500
 
-        # Guarda el texto OCR en sesión para poder reutilizarlo
         session['last_ocr'] = texto
 
         # Normalización IA / fallback local
@@ -142,9 +155,14 @@ def dashboard():
         else:
             datos_extraidos = extractor(texto) if extractor else extraer_datos(texto)
 
-        return render_template('dashboard.html', datos=datos_extraidos, texto_ocr=texto)
+        return render_template(
+            'dashboard.html',
+            datos=datos_extraidos,
+            texto_ocr=texto,
+            logo_url=session.get('last_logo')
+        )
 
-    # ----- 3) GET inicial -----
+    # 3) GET inicial
     return render_template('dashboard.html', datos=None, texto_ocr=None)
 
 @app.route('/generar_pdf', methods=['POST'])
