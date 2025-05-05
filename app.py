@@ -12,6 +12,7 @@ from reportlab.pdfgen import canvas
 from deepseek_client import normalizar_por_deepseek
 from extract_logo import extract_logo
 from flask import send_from_directory
+from excel_integration import append_to_excel
 
 # Ruta de Tesseract en Windows
 pytesseract.pytesseract.tesseract_cmd = r'C:\Tesseract\tesseract.exe'
@@ -155,12 +156,16 @@ def dashboard():
         else:
             datos_extraidos = extractor(texto) if extractor else extraer_datos(texto)
 
+        append_to_excel(datos_extraidos)
+        print(datos_extraidos.keys())
+        
         return render_template(
             'dashboard.html',
             datos=datos_extraidos,
             texto_ocr=texto,
             logo_url=session.get('last_logo')
         )
+
 
     # 3) GET inicial
     return render_template('dashboard.html', datos=None, texto_ocr=None)
