@@ -5,9 +5,9 @@ Requisitos Previos:
 - Tesseract OCR
 
 Descarga de Tesseract OCR
--Link descarga: https://sourceforge.net/projects/tesseract-ocr.mirror/postdownload
--Una vez descargado el archivo .exe sigue los siguientes pasos:
--Al momento de llegar al paso de elegir la ruta de instalación, dar click en "examinar", luego dar click en "Este equipo", luego elegir "Disco local C",
+- Link descarga: https://sourceforge.net/projects/tesseract-ocr.mirror/postdownload
+- Una vez descargado el archivo .exe sigue los siguientes pasos:
+- Al momento de llegar al paso de elegir la ruta de instalación, dar click en "examinar", luego dar click en "Este equipo", luego elegir "Disco local C",
   estando allí creamos una carpeta la cual se tiene que llamar "Tesseract", por ultimo elegimos esa carpeta para finalizar la instalación.
 
 Una vez clonado el repositorio, ingresar a la carpeta del proyecto
