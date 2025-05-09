@@ -37,7 +37,7 @@ def normalizar_por_deepseek(texto_ocr: str) -> dict:
     # Construye el prompt para pedir la extracción de campos
     prompt = (
         "Extrae de este texto los siguientes campos en formato JSON:\n"
-        "Nit, Fecha, Monto, IVA, Número de factura, Establecimiento\n\n"
+        "nit_comprador  ( o el Nit que aparece arriba de “nombre del cliente”, puede aparecer como “Na” ), Fecha, Monto, IVA, Número_de_factura, Establecimiento\n\n"
         f"Texto OCR:\n```\n{texto_ocr}\n```"
     )
 
@@ -65,10 +65,10 @@ def normalizar_por_deepseek(texto_ocr: str) -> dict:
 
     # Mapea las claves del JSON de IA a las que usa tu app
     return {
-        "nit":               data.get("Nit", ""),
+        "nit":               data.get("nit_comprador", ""),
         "fecha":             data.get("Fecha", ""),
         "monto":             str(data.get("Monto", "")),
         "iva":               str(data.get("IVA", "")),
-        "número de factura": data.get("Número de factura", ""),
+        "número de factura": data.get("Número_de_factura", ""),
         "establecimiento":   data.get("Establecimiento", "")
     }
